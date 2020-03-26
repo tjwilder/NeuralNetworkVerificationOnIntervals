@@ -29,7 +29,7 @@ Your job is to, given an image I with label L, verify that changing the brightne
 
 Following our notation from class, this is the property we want for an image I with label L and some constant epsilon:
 ```
-{|x - I| <= epsilon>}
+{|x - I| <= epsilon}
 r <- f(x)
 {argmax_i r_i = L}
 ```
