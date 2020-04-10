@@ -23,6 +23,10 @@ This assignment is designed to help you understand abstraction-based techniques 
 
 The code supplied is *exactly* the same one used in A1.
 
+## Original Output ##
+
+8989 / 10000 for e=.001 across the whole test set but took like an hour
+
 ## Your job
 
 Your job is to, given an image I with label L, verify that changing the brightness slightly of any pixel in I still results in the label L.

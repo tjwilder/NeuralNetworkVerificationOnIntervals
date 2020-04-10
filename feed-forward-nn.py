@@ -1,4 +1,5 @@
 import functools
+import time
 import sys
 import torch
 import torch.nn as nn
@@ -79,8 +80,6 @@ class Range():
 
 
 def ranged_dot(ranges, w, b):
-  # TODO: reduce redundancy here with one loop that calculates
-  #   the final min/max of each
   # Scale all ranges by appropriate weights
   y = [[ranges[i].scale(w[j][i]) for i in range(len(ranges))]
        for j in range(len(w))]
@@ -89,6 +88,7 @@ def ranged_dot(ranges, w, b):
        for j in range(len(y))]
   # Add bias
   y = [y[i].add_scalar(b[i]) for i in range(len(y))]
+
   return y
 
 
@@ -258,6 +258,7 @@ def plot_dataset(image):
 
 def test_ranged(epsilon):
   robust = 0
+  t = time.time()
   for i in range(len(test_dataset)):
     image = test_dataset[i][0]
     image = image.reshape(-1, 28 * 28).to(device)[0]
@@ -266,7 +267,13 @@ def test_ranged(epsilon):
     # print(ranges)
     if range_matches(ranges, label):
       robust += 1
+      # print(True)
+    # else:
+      # print(False)
     # print(model.forward(image))
+    if i % 100 == 0:
+      print('Average time (over 100 samples):', (time.time() - t) / 100)
+      t = time.time()
   print(robust, len(test_dataset))
 
 
