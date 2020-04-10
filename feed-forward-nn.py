@@ -44,63 +44,60 @@ class NeuralNet(nn.Module):
     return out
 
 
-class Range():
-  def __init__(self, lower_bound, upper_bound):
-    self.lower = lower_bound
-    self.upper = upper_bound
+# I originally made a Range class, but  it was slow so I changed it to use
+#  tuples. However this only changed the average time .24 => .22
+def r_add(this, other):
+  lower = this[0] + other[0]
+  upper = this[1] + other[1]
+  return (lower, upper)
 
-  def __repr__(self):
-    return f'[{self.lower:.4f}, {self.upper:.4f}]'
 
-  def add(self, other):
-    lower = self.lower + other.lower
-    upper = self.upper + other.upper
-    return Range(lower, upper)
+def r_add_scalar(this, scalar):
+  lower = this[0] + scalar
+  upper = this[1] + scalar
+  return (lower, upper)
 
-  def add_scalar(self, scalar):
-    lower = self.lower + scalar
-    upper = self.upper + scalar
-    return Range(lower, upper)
 
-  def scale(self, factor):
-    min_num = self.lower * factor
-    max_num = self.upper * factor
-    # Account for negative factors
-    lower = min(min_num, max_num)
-    upper = max(min_num, max_num)
-    return Range(lower, upper)
+def r_scale(this, factor):
+  min_num = this[0] * factor
+  max_num = this[1] * factor
+  # Account for negative factors
+  lower = min(min_num, max_num)
+  upper = max(min_num, max_num)
+  return (lower, upper)
 
-  def relu(self):
-    if self.upper < 0:
-      return Range(0, 0)
-    if self.lower > 0:
-      return Range(self.lower, self.upper)
 
-    return Range(0, self.upper)
+def r_relu(this):
+  if this[1] < 0:
+    return (0, 0)
+  if this[0] > 0:
+    return (this[0], this[1])
+
+  return (0, this[1])
 
 
 def ranged_dot(ranges, w, b):
   # Scale all ranges by appropriate weights
-  y = [[ranges[i].scale(w[j][i]) for i in range(len(ranges))]
+  y = [[r_scale(ranges[i], w[j][i]) for i in range(len(ranges))]
        for j in range(len(w))]
   # Sum them together to complete the dot product
-  y = [functools.reduce(lambda a, b: a.add(b), y[j])
+  y = [functools.reduce(lambda a, b: r_add(a, b), y[j])
        for j in range(len(y))]
   # Add bias
-  y = [y[i].add_scalar(b[i]) for i in range(len(y))]
+  y = [r_add_scalar(y[i], b[i]) for i in range(len(y))]
 
   return y
 
 
 def forward_range(epsilon, x):
-  ranged_x = [Range(p - epsilon, p + epsilon) for p in x]
+  ranged_x = [(p - epsilon, p + epsilon) for p in x]
   # applies linear transformation to the input data, y = wx + b
   w = fetch_weights(1)
   b = fetch_bias(1)
   y_1 = ranged_dot(ranged_x, w, b)
 
   # applies the RELU activation function on the hidden layer
-  y_2 = [y.relu() for y in y_1]
+  y_2 = [r_relu(y) for y in y_1]
 
   # applies linear transformation to the hidden layer to map to the
   # output layer
@@ -113,8 +110,8 @@ def forward_range(epsilon, x):
 
 
 def range_matches(ranges, label):
-  label_min = ranges[label].lower
-  return all([ranges[r].upper < label_min
+  label_min = ranges[label][0]
+  return all([ranges[r][1] < label_min
               for r in range(len(ranges)) if r != label])
 
 
@@ -271,10 +268,10 @@ def test_ranged(epsilon):
     # else:
       # print(False)
     # print(model.forward(image))
-    if i % 100 == 0:
+    if i % 100 == 0 and i != 0:
       print('Average time (over 100 samples):', (time.time() - t) / 100)
       t = time.time()
-  print(robust, len(test_dataset))
+  print(f'Robust amount for epsilon={epsilon}: {robust}/{len(test_dataset)}')
 
 
 def main():
@@ -290,7 +287,9 @@ def main():
   else:
     load_model()
   # test()
-  test_ranged(0.001)
+  epsilons = [0.001, 0.002, 0.003]
+  for epsilon in epsilons:
+    test_ranged(epsilon)
 
   # Print first image in the test dataset
   # for i, image in enumerate(test_dataset):
