@@ -1,6 +1,8 @@
-# A2: Abstraction-based verification
+# Abstraction-based verification of Neural Networks
 
-Due: April 10
+## Goal ##
+
+In this model, we first train a simple neural network on the MNIST training set to do digit classification. Next, we take the trained model and correctly classified image and attempt to verify robustness by checking intervals of pixels instead of exact pixel values. That is, instead of classifying an image, it can classify a range of images where each pixel is an interval instead of a specific value. This can tell us if changing any numbers of pixels by a small amount can change the classification. In this experiment, we saw that changing any numbers of pixels by 0.1%, only about 5% of images would not certainly be the correct classification. But by changing them by as much as 1%, over 60% of the images could become uncertain. Technically, this doesn't show that that those images _can_ be misclassified, it shows that the outputs (which are also intervals) overlap so the correct classification isn't guaranteed.
 
 ## Requirements
 Make sure Python3.6 or above is installed
@@ -28,14 +30,14 @@ python3 feed-forward-nn.py
     - Each NN forward pass took 0.24s (40 minutes total per epsilon)
 - I tried changing to tuples instead of a class
     - Each NN forward pass took 0.22s (37 minutes total per epsilon)
-- I changed to using tensor operations over lists of lower  and upper bounds
-    - Though this require more total operations, they were internally optimized
+- I changed to using tensor operations over lists of lower and upper bounds
+    - Though this require more total operations, they were internally optimized and parallelized
     - Each NN forward pass took 0.013s (2.2 minutes total per epsilon)
 
 ## Output ##
 
-This is the output for the "test" version. You can re-train the model by using `python feed-forward-nn.py train`. Epsilon is the amount that each pixel can change up and down (ie `range = (x_i - epsilon, x_i + epsilon)` for all `i`)
-The "robust amount" means that the lower bound of the correct label's interval is greater than the upper bounds of all incorrect labels. This means that the maximum robustness is the normal accuracy (92.54%)
+- This is the output for the "test" version. You can re-train the model by using `python feed-forward-nn.py train`. Epsilon is the amount that each pixel can change up and down (ie `range = (x_i - epsilon, x_i + epsilon)` for all `i`)
+- The "robust amount" means that the lower bound of the correct label's interval is greater than the upper bounds of all incorrect labels. This means that the maximum robustness is the normal accuracy (92.54%)
 
 ```
 Timothys-MBP:A2-interval-abstraction tj$ python feed-forward-nn.py
@@ -81,22 +83,3 @@ Following our notation from class, this is the property we want for an image I w
 r <- f(x)
 {argmax_i r_i = L}
 ```
-Notice that we take the largest index of the size 10 output vector. (We're working with MNIST again)
-
-You will verify the above property using interval abstraction.
-In other words, every pixel of the input image is now an interval, instead of a single real number, and therefore every node in the network also spits out an interval of values.
-Consult the notes for more details.
-
-Here's how I would approach this assignment:
-1. Create a data structure that represents a vector of intervals.
-2. Implement all necessary operations over that data structure to mimic those performed by the neural network. For example, our network contains a ReLU layer (`self.relu(x)`), so you need a version of that function that applies ReLUs over intervals (`self.relu_interval(xi)`), etc.
-
-What to hand in:
-1. Unlike with A1, this should be really fast. So pick 3 values of epsilon, and run the verification on the whole test set of images, and submit the code that iterates through the dataset. You might not be able to prove a lot of images robust (remember, with abstraction-based techniques, sometimes the answer is *Don't know* when the abstraction is too imprecise). If you find that's the case, make epsilon smaller, or make it non-zero only for the first N pixels instead of all pixels.
-2. If things work with the small network, try to add more layers, retrain and see what happens.
-3. If you get really excited, try to implement the zonotopes domain, or a network with sigmoid/tanh instead of ReLUs.
-
-## Hand in
-Please send zip file to aws@cs.wisc.edu
-
-This is an individual assignment, but feel free to discuss with colleagues.
