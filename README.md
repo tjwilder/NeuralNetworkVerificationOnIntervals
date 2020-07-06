@@ -73,9 +73,9 @@ Average time (1000 images): 0.013386988878250123
 Robust amount for epsilon=0.01: 2849/10000
 ```
 
-## Your job
+## Problem Statement
 
-Your job is to, given an image I with label L, verify that changing the brightness slightly of any pixel in I still results in the label L.
+Given an image I with label L, verify that changing the brightness slightly of any pixel in I still results in the label L.
 
 Following our notation from class, this is the property we want for an image I with label L and some constant epsilon:
 ```
